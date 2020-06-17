@@ -130,6 +130,23 @@ class Util
         return implode('', $temp_array);
     }
 
+    
+    /** 
+     * #下划线转驼峰
+     * @author  WYY 2020-06-17 16:08
+     * @param string $str
+     * @param boolean $ucfirst
+     * @return string
+     */
+    static function convertUnderline( $str , $ucfirst = true)
+    {
+        while(($pos = strpos($str , '_'))!==false)
+            $str = substr($str , 0 , $pos).ucfirst(substr($str , $pos+1));
+            
+        return $ucfirst ? ucfirst($str) : $str;
+    }
+    
+    
     /**
      * 获取IP
      *

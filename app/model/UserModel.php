@@ -1,7 +1,6 @@
 <?php
 namespace app\model;
 
-use app\base\BaseModel;
 
 /**
  * 用户的model
@@ -13,7 +12,7 @@ use app\base\BaseModel;
  * <li>用注解来区分数据库字段/自定义属性。并在注解里做格式大小限制。保存里自动验证
  * <li>全部的注解，可以根据数据库内容，用工具生成。免手写(可以手工小修改)
  */
-class UserModel extends BaseModel
+class UserModel extends \app\base\BaseModel
 {
 
     /**
