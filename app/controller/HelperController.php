@@ -7,7 +7,7 @@ use app\libary\Util;
 
 /**
  * 助手工具
- * <li>生成一些常用文件(model)
+ * <li>生成一些常用文件(model,dao,service)
  * <li>快速开发
  * <li>正式环境请删除
  * <li>二期工程：会自动根据数据表外键生成对应的模型关系
@@ -18,13 +18,32 @@ class HelperController extends BaseController
 {
     //这些参数使用默认值即可
     
+    //model的配置
     private $dir =  BASE_DIR. '/app/model/';  //生成的路径(确保存在路径)
     private $name_space = 'app\model';  //类的name_space。命名空间最好与路径一致。要不然就要在$Loader写加载路径
     private $parent_class = '\app\base\BaseModel';  //父类
+    
+    //dao
+    private $dao_dir =  BASE_DIR. '/app/dao/';  //生成的路径(确保存在路径)
+    private $dao_name_space = 'app\dao';  //类的name_space。命名空间最好与路径一致。要不然就要在$Loader写加载路径
+    private $dao_parent_class = '\app\base\BaseDao';  //父类
+    
+    //srvice
+    private $service_dir =  BASE_DIR. '/app/service/';  //生成的路径(确保存在路径)
+    private $service_name_space = 'app\service';  //类的name_space。命名空间最好与路径一致。要不然就要在$Loader写加载路径
+    private $service_parent_class = '\app\base\BaseService';  //父类
+    
+    
+    
     private $force_cover = false;  //是否强制覆盖。 （如果文件已经存在，将会被覆盖）
     
     
 
+    /** 
+     * #首页
+     * @author  WYY 2020-06-18 14:59
+     * @return string
+     */
     public function indexAction()
     {
         return 'helper--index';
@@ -32,68 +51,112 @@ class HelperController extends BaseController
     
     
     
+    
+    
     /** 
-     * #生成所有model
+     * #生成所有
      * #测试
      * @author  WYY 2020-06-17 11:58
      */
     public function testAction() 
     {
 
-        //将所有的数据表都生成对应的Model
-        $this->createAllModel();
+        $this->createAll();
     }
     
     
     
     /** 
-     * #生成所有的Model
+     * #自动生成所有的
+     * <li>根据数据表来生成
+     * <li>生成model,dao,service
      * @author  WYY 2020-06-17 17:13
      */
-    private function createAllModel() 
+    private function createAll() 
     {
         $tables = $this->getAllTable();
         
         $total = count($tables);
-        $succ = 0;  //成功数
-        $fail = 0;  //失败数
+        $model_succ = 0;  //成功数
+        $model_fail = 0;  //失败数
+ 
+        $dao_succ = 0;  //成功数
+        $dao_fail = 0;  //失败数
+        
+        $service_succ = 0;  //成功数
+        $service_fail = 0;  //失败数
+        
+        
         foreach ($tables as $tab)
         {
-            //table_name处理
-            $result = $this->createModel($tab['TABLE_NAME']);
+            
+            $name_data = $this->tbName2ModelName($tab['TABLE_NAME']); 
+            
+            /*
+                          * 生成model。自动把第一个下划线视为表前缀
+             */
+            $result = $this->renderModel($tab['TABLE_NAME']);
             
             if ($result)
             {
-                $succ ++;
-                echo $tab['TABLE_NAME'].'--------create Model succ<br/>';
+                $model_succ ++;
             }
             else
             {
-                $fail ++;
-                echo $tab['TABLE_NAME'].'###Fail<br/>';
+                $model_fail ++;
             }
+            
+            //生成dao
+            $result = $this->renderDao($name_data['model_name']);
+            
+            if ($result)
+            {
+                $dao_succ ++;
+            }
+            else
+            {
+                $dao_fail ++;
+            }
+            
+            
+            //生成service
+            $result = $this->renderService($name_data['model_name']);
+            
+            if ($result)
+            {
+                $service_succ ++;
+            }
+            else
+            {
+                $service_fail ++;
+            }
+            
         }
         
         //简单统计
         echo '<hr/>';
-        echo  'total: '.$total.'<br/>';
-        echo  'succ: '.$succ.'<br/>';
-        echo  'fail: '.$fail.'<br/>';
+        echo  'tables_total: '.$total.'<br/>';
+        echo  'model_succ: '.$model_succ.'<br/>';
+        echo  'model_fail: '.$model_fail.'<br/>';
+        echo  'dao_succ: '.$dao_succ.'<br/>';
+        echo  'dao_fail: '.$dao_fail.'<br/>';
+        echo  'service_succ: '.$service_succ.'<br/>';
+        echo  'service_fail: '.$service_fail.'<br/>';
+           
     }
     
+
     
     
     /** 
-     * #生成一个Model
-     * @author  WYY 2020-06-17 12:01
-     * @param string $table_name 表名
+     * #渲染生成一个model
+     * @author  WYY 2020-06-18 11:37
+     * @param string $table_name
      */
-    private function createModel($table_name) 
+    private function renderModel($table_name)
     {
-        //table_name处理
         $table_name_data = $this->tbName2ModelName($table_name);
         $file_name = $this->dir.$table_name_data['model_name'].'.php';
-        
         
         if (!$this->force_cover)
         {
@@ -101,50 +164,130 @@ class HelperController extends BaseController
             if (is_file($file_name))
             {
                 return false;
-            }   
+            }
+        }
+
+        $view = $this->view;
+
+        $view->setVar('name_space', $this->name_space);   
+        $view->setVar('model_name', $table_name_data['model_name']);  
+        $view->setVar('parent_class', $this->parent_class);
+        $view->setVar('author', 'HelperTool auto at '.date('Y-m-d H:i:s'));
+        $view->setVar('php_tag', '<?php');
+        $view->setVar('suff', $table_name_data['suff']);
+        $view->setVar('fields', $this->getFieldarr($table_name));
+        
+        //model模板   /view/helper/model.templet
+        $content =   $view->render('helper', 'model')->getContent();
+        ob_clean();
+        
+
+        return file_put_contents($file_name, $content); 
+    }
+    
+    
+    
+    /**
+     * #渲染生成一个DAO
+     * <li>根据model_name来生成
+     * @author  WYY 2020-06-18 12:48
+     * @param string $model_name
+     */
+    private function renderDao($model_name)
+    {
+        $dao_name = str_replace('Model','Dao',$model_name);
+        
+        $file_name = $this->dao_dir.$dao_name.'.php';
+        
+        if (!$this->force_cover)
+        {
+            //判断model是否存在，不做覆盖处理
+            if (is_file($file_name))
+            {
+                return false;
+            }
         }
         
-         //字段信息
-         $field = $this->getFieldString($table_name);
-
-
-         //类信息
-         $str = $this->createModelClass($table_name_data['model_name'], $field);
-         
-         //去掉tab符    
-         $str = str_replace("    ","",$str);
-
-         //保存到文件
-         return file_put_contents($file_name, $str);
+        $view = $this->view;
+        
+        $view->setVar('name_space', $this->dao_name_space);
+        $view->setVar('dao_name', $dao_name);
+        $view->setVar('parent_class', $this->dao_parent_class);
+        $view->setVar('author', 'HelperTool auto at '.date('Y-m-d H:i:s'));
+        $view->setVar('php_tag', '<?php');
+        
+        
+        //dao模板   /view/helper/dao.templet
+        $content =   $view->render('helper', 'dao')->getContent();
+        ob_clean();
+        
+        
+        return file_put_contents($file_name, $content);
+    }
+    
+    
+    /**
+     * #渲染生成一个Service
+     * <li>根据model_name来生成
+     * @author  WYY 2020-06-18 12:48
+     * @param string $model_name
+     */
+    private function renderService($model_name)
+    {
+        
+        $service_name = str_replace('Model','Service',$model_name);
+        $dao_name = str_replace('Model','Dao',$model_name);
+        
+        $file_name = $this->service_dir.$service_name.'.php';
+        
+        if (!$this->force_cover)
+        {
+            //判断model是否存在，不做覆盖处理
+            if (is_file($file_name))
+            {
+                return false;
+            }
+        }
+        
+        $view = $this->view;
+        
+        $view->setVar('name_space', $this->service_name_space);
+        $view->setVar('parent_class', $this->service_parent_class);
+        $view->setVar('author', 'HelperTool auto at '.date('Y-m-d H:i:s'));
+        $view->setVar('php_tag', '<?php');
+        
+        
+        $view->setVar('self_dao', $this->dao_name_space.'\\'.$dao_name);
+        $view->setVar('service_name', $service_name);
+        $view->setVar('full_model_name', $this->name_space.'\\'.$model_name);
+        $view->setVar('model_name', $model_name);
+        
+        
+        
+        
+        //service模板   /view/helper/service.templet
+        $content =   $view->render('helper', 'service')->getContent();
+        ob_clean();
+        
+        
+        return file_put_contents($file_name, $content);
     }
     
     
     /** 
-     * #生成字段的信息
-     * @author  WYY 2020-06-17 15:19
+     * #生成field的列表
+     * @author  WYY 2020-06-18 11:57
      * @param string $table_name
      */
-    private function getFieldString($table_name) 
+    private function getFieldarr($table_name) 
     {
+        $list = [];
+        
         $conn = Util::getConnect();
         
         $sql = 'DESC '.$table_name;
         
         $data = $conn->fetchAll($sql);
-        
-        $table_name_data = $this->tbName2ModelName($table_name);
-        
-        
-        /*
-         *如果前缀都相同，可以统一抽取到父类
-         *如果一个库里有多种前缀.请在Model目录里建以前缀为名的目录。(这里先不搞)
-         */
-        $str = "/**
-                 * 数据表前缀
-                 * @var string
-                 */
-                protected static \$db_pre = '{$table_name_data['suff']}';
-                ";
         
         foreach ($data as $one)
         {
@@ -262,44 +405,16 @@ class HelperController extends BaseController
                 
                 ";
             
-            
-            $str .= $temp;
+            //去掉tab符
+            $list[] =  str_replace("    "," ",$temp);
         }
         
         
-        return $str;
+        return $list;
     }
     
     
-    /** 
-     * #生成class
-     * @author  WYY 2020-06-17 16:02
-     * @param string $model_name
-     * @param string $field
-     */
-    private function createModelClass($model_name ,$field)
-    {
-        $now = date('Y-m-d H:i:s');
-        
-        $str = "<?php
-            namespace {$this->name_space};
-            
-            
-            /**
-             *
-             * @author(HelperTool auto at {$now})
-             */
-            class {$model_name} extends {$this->parent_class}
-            {
 
-                {$field}
-            
-            }
-            
-            ";
-                      
-        return $str;
-    }
     
     /** 
      * #将table_name切分割
@@ -345,6 +460,8 @@ class HelperController extends BaseController
         
         return $conn->fetchAll($sql);
     }
+    
+
     
     
     
