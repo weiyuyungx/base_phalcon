@@ -135,6 +135,7 @@ class UserModel extends \app\base\BaseModel
         
         //自动生成盐
         $this->salt = self::getNewSalt();
+        
     }
     
     /**

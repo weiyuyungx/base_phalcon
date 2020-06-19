@@ -162,5 +162,29 @@ class UserService extends BaseService
     
     
     
+    /** 
+     * #phqltest demo
+     * @author  WYY 2020-06-19 10:54
+     * @param int $id
+     * @return \Phalcon\Mvc\Model\Resultset\Simple|\app\model\UserModel[]
+     */
+    public static function phqltest($id) 
+    {
+        return SelfDao::findOndByPhql($id);
+    }
+    
+    
+    /**
+     * #buildertest demo
+     * @author  WYY 2020-06-19 10:54
+     * @param int $id
+     * @return \Phalcon\Mvc\Model\Resultset\Simple|\app\model\UserModel[]
+     */
+    public static function buildertest($id)
+    {
+        return SelfDao::findOneByBuilder($id);
+    }
+    
+    
 }
 

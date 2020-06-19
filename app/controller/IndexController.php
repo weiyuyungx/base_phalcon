@@ -181,6 +181,18 @@ class IndexController extends BaseController
     }
     
 
+    /** 
+     * #phql/builder的例子
+     * @author  WYY 2020-06-19 10:55
+     */
+    public function phqlTestAction() 
+    {
+        $data['user_1'] = UserService::phqltest(4);
+        $data['user_2'] = UserService::buildertest(4);
+        
+        return $this->ok($data);
+    }
+    
  
     
 }
