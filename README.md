@@ -3,11 +3,12 @@
 <ul>
 <li>数据处理严格分层</li>
 <li>二次封装了数据查询DAO，以及MODEL事件操作</li>
-<li>用助手工具可以一键生成Model</li>
+<li>用助手工具可以一键生成Model,Dao,Service</li>
 <li>访问权限与业务操作分开</li>
+<li>分离配置</li>
 <li>简单明了，上手可用，快速开发，低耦合</li>
 </ul>           
-
+<li>phalcon v3.4</li>
 <h6>二期功能</h6>
 <ul>
 <li>根据数据表外键，自动生成Model关系</li>

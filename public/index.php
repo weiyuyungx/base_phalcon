@@ -163,7 +163,7 @@ try
             
             $view->registerEngines(
                 array(
-                    // '.phtml' => 'Phalcon\Mvc\View\Engine\Php',
+                    '.phtml' => 'Phalcon\Mvc\View\Engine\Php',
                     '.html' => function ($view, $di)
                     {
                         $volt = new \Phalcon\Mvc\View\Engine\Volt($view, $di);
@@ -175,7 +175,20 @@ try
                         ));
                         
                         return $volt;
-                }
+                    },
+                    
+                    '.tpl' => function ($view, $di)  //渲染生成model/dao/service文件时用
+                    {
+                        $volt = new \Phalcon\Mvc\View\Engine\Volt($view, $di);
+                        $volt->setOptions(array(
+                            // 模板是否实时编译
+                            'compileAlways' => false,
+                            // 模板编译目录
+                            'compiledPath' => BASE_DIR . "/runtime/compiled/"
+                        ));
+                        
+                        return $volt;
+                    }
                 ));
             return $view;
     },true);
@@ -185,15 +198,8 @@ try
     $di->set('db',
         function () use ($mylog, $di)
         {
-
-            $db_config = [
-                "host" => "192.168.1.21",
-                "username" => "root",
-                "password" => "root",
-                "dbname" => "test",
-                'charset' => 'utf8',
-                'persistent' => true
-            ];
+            //数据库配置
+            $db_config = Util::getConfig()->database->toArray();
 
             $connection = new \Phalcon\Db\Adapter\Pdo\Mysql($db_config);
 
@@ -260,9 +266,7 @@ try
     $response->send($content);
 
     $mylog->setLog('[content]' . PHP_EOL . $content, \Phalcon\Logger::INFO);
-    $mylog->save();
 
-    // echo $content;
 }
 catch (\Throwable $e) // 意外抛错(语法类型的错)
 {
@@ -316,10 +320,6 @@ function weiout($json)
     $mylog->setSave_dir(BASE_DIR . '/runtime/error/' . date('Ymd') . '_err.txt'); // 出错时的地址
     $mylog->setLog('[code]' . $json['code'], \Phalcon\Logger::ERROR);
     $mylog->setLog('[msg]' . $json['debug']['errmsg'], \Phalcon\Logger::ERROR);
-    
-    $mylog->save();
-    
-    
     
     
     $response->send();

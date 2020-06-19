@@ -418,7 +418,31 @@ class Util
     }
     
     
+    /** 
+     * #获取配置信息
+     * @author  WYY 2020-06-19 09:25
+     * @return \Phalcon\Config\Adapter\Ini
+     */
+    public static function getConfig() 
+    {       
+        static $config;
+        if (empty($config))
+        {
+            $config = new \Phalcon\Config\Adapter\Ini(BASE_DIR.'/config.ini');
+            
+            $env_file = BASE_DIR.'/my.env';
+            if (is_file($env_file))
+            {
+                $env = new \Phalcon\Config\Adapter\Ini($env_file);
+                
+                //合并两份配置
+                $config->merge($env);
+            }
 
+        }
+
+        return $config;
+    } 
     
     
     

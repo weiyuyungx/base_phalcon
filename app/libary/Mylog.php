@@ -58,9 +58,6 @@ class Mylog
         $this->setLog('[url]'.$url.'   [ip]'.Util::getIp(),6);
         
         
-        
-        
-        
         $this->setLog('[post]'.json_encode($_POST),\Phalcon\Logger::INFO);
        
         //默认保存地址 (没有抛错)
@@ -105,6 +102,7 @@ class Mylog
           }
           
           
+          
         $log = new \Phalcon\Logger\Adapter\File($this->save_dir);
         $log->setFormatter(new \Phalcon\Logger\Formatter\Line('[%type%]%message%','Y-m-d H:i:s'));
 
@@ -112,7 +110,21 @@ class Mylog
         {
             $log->log($v['message'],$v['type']);
         }
-        
+
+    }
+    
+    
+    /** 
+     * #析构
+     * @author  WYY 2020-06-19 10:08
+     */
+    public function __destruct() 
+    {
+        //自动保存
+        if (Util::getConfig()->sys->save_log)
+        {
+            $this->save();
+        }
     }
     
 }

@@ -6,7 +6,6 @@ use app\service\UserService;
 use app\dao\UserDao;
 use app\libary\Page;
 use app\model\UserModel;
-use app\service\DictService;
 
 
 /**
@@ -31,7 +30,7 @@ class IndexController extends BaseController
     public function testAction()
     {
           
-        $di = DictService::findOneByid(1);
+        $di = UserService::findOneByid(4);
         
         
         print_r($di->toArray());
