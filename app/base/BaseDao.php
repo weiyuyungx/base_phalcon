@@ -145,10 +145,8 @@ abstract class BaseDao
      */
     protected static function excutePhql($phql, $param)
     {
-        $di = \Phalcon\Di::getDefault();
-        
-        $modelsManager = $di->get('modelsManager');
-        
+        $modelsManager = Util::getModelsManager();
+       
         return $modelsManager->createQuery($phql)->execute($param);
     }
     

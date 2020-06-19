@@ -6,6 +6,7 @@ use app\service\UserService;
 use app\dao\UserDao;
 use app\libary\Page;
 use app\model\UserModel;
+use app\libary\Util;
 
 
 /**
@@ -229,6 +230,42 @@ class IndexController extends BaseController
         
         return $this->outResult($result);
     }
+    
+    
+    /** 
+     * #使用缓存的例子
+     * @author  WYY 2020-06-19 15:26
+     */
+    public function cacheTestAction() 
+    {
+        $cache = Util::getCache();
+        
+        $value = $cache->get('mytestcache'); //获取
+        
+        var_dump($value);
+        
+        //$cache->save('mytestcache','weikjkjkjkj'); //保存
+        
+    }
+    
+    
+    /** 
+     * #查询使用缓存的例子
+     * @author  WYY 2020-06-19 16:13
+     */
+    public function queryCacheAction() 
+    {
+        
+        //使用缓存
+        $data['phql'] = UserService::findOndByPhqlCache(4);
+        $data['builder'] = UserService::findOneByBuilderCache(5);
+        
+        
+        
+        return $this->ok($data);
+    }
+    
+    
     
     
     

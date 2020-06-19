@@ -445,5 +445,27 @@ class Util
     } 
     
     
+    /**
+     * #获取缓存实例
+     * @author WYY 2018年9月5日 上午10:27:18
+     * @return \Phalcon\Cache\Backend\File
+     */
+    public static function getCache()
+    {
+       return self::getDi()->get('modelsCache');
+    }
+    
+    /** 
+     * #获取modelsManager
+     * @author  WYY 2020-06-19 15:49
+     * @return \Phalcon\Mvc\Model\Manager
+     */
+    public static function getModelsManager() 
+    {
+        return self::getDi()->get('modelsManager');
+    }
+    
+    
+    
     
 }

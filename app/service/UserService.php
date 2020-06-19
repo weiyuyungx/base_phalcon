@@ -187,5 +187,29 @@ class UserService extends BaseService
     }
     
     
+    /** 
+     * #查询PHQL，用缓存
+     * #例子
+     * @author  WYY 2020-06-19 16:12
+     * @param int $id
+     */
+    public static function findOndByPhqlCache($id) 
+    {
+      return   SelfDao::findOndByPhqlCache($id);
+    }
+    
+    /**
+     * #builder查询，用缓存
+     * #例子
+     * @author  WYY 2020-06-19 16:12
+     * @param int $id
+     */
+    public static function findOneByBuilderCache($id) 
+    {
+        return   SelfDao::findOneByBuilderCache($id);
+    }
+    
+    
+    
 }
 

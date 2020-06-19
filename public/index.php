@@ -246,10 +246,32 @@ try
     },true);
 
     
-    /**
-     *
-     * @var Request $request
-     */
+    
+    // 设置模型缓存服务
+    $di->set(
+        'modelsCache',
+        function () {
+            // 缓存数据一天（默认设置）
+            $frontCache = new \Phalcon\Cache\Frontend\Data(
+                [
+                    'lifetime' => 3600 *24,
+                ]
+                );
+            
+            //用文件进行缓存 ,可自行改成其它           
+            $cache = new \Phalcon\Cache\Backend\File(
+                $frontCache,
+                [
+                    "cacheDir" => BASE_DIR . "/runtime/cache/",
+                ]
+                );
+            
+            return $cache;
+        }
+    );
+
+    
+    //uri 任意取一个
     if (isset($_GET['_url']) )
         $uri = $_GET['_url'];
     else
