@@ -32,7 +32,8 @@ class LoginController extends BaseController
          if (empty($user))
              return $this->output(3, '不存在的用户名');
          
-         
+         //判定passwd是不是有效的
+         //当明文使用。无感知哈希加盐等
          if ($user->isRealPasswd($passwd))
          {
              $this->session->set('uid', $user->id);

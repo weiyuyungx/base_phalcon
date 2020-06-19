@@ -76,14 +76,17 @@ class IndexController extends BaseController
      */
     public function saveUser2Action() 
     {
-        $user = new UserModel();  //有些人喜欢这么用
+       // $user = new UserModel();  //有些人喜欢这么用
+       
+        $user = UserService::findOneByid(4);
         
         $user->headimg = 'xx.jpg';
         $user->sex = 1;
         $user->passwd = '123456';
-        $user->name = 'aaa123';
-        $user->unionid = 'xxcccvvvdddeee';
-        $user->mobile = '13800138101';
+        $user->name = 'aaa15';
+        $user->unionid = 'xcvvvdddeee';
+        $user->mobile = '13800138105';
+        
         
         $result = $user->save();
         
@@ -174,26 +177,60 @@ class IndexController extends BaseController
         
         
         $this->view->setVar('name', 'weikkk');
-        
-
-        
-
     }
     
 
     /** 
-     * #phql/builder的例子
+     * #phql/builder查询的例子
      * @author  WYY 2020-06-19 10:55
      */
     public function phqlTestAction() 
     {
-        $data['user_1'] = UserService::phqltest(4);
-        $data['user_2'] = UserService::buildertest(4);
+        //这里查出来都是列表，取第一条
+        $user_1 = UserService::phqltest(4);
+        $user_2 = UserService::buildertest(4)->getFirst();
+        
+        
+        $data['user_1'] = $user_1;
+        $data['user_2'] = $user_2;
+        
+        //没被屏蔽的字段，可以直接取
+        //IDE有字段属性提示，友好。被屏蔽的字段(private)不会提示出来
+        //一般按这里的方法拿
+        $data['user_1_mobile'] = $user_1->mobile;
+        
+       
+        
+        //被屏蔽的字段只能这么拿。
+        $data['user_1_salt'] = $user_1->getAttr('salt');
+        
+
         
         return $this->ok($data);
     }
     
  
+    
+    /** 
+     * #修改密码的例子
+     * @author  WYY 2020-06-19 14:49
+     */
+    public function editPasswdAction() 
+    {
+        $user = UserService::findOneByid(4);
+        
+        /*
+         * #Model层对passwd屏蔽了加盐/哈希等过程，这里无感知
+         * #这里修改passwd，就当成明文使用
+         */
+        $user->passwd = '123456789';
+        
+        $result = $user->save();
+        
+        return $this->outResult($result);
+    }
+    
+    
     
 }
 

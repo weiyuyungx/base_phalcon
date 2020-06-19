@@ -42,10 +42,13 @@ class UserModel extends \app\base\BaseModel
     public $unionid;
 
     /**
-     * 创建时间
+     * #创建时间
+     * <li>自动生成的。不允许修改
+     * <li>所以设成私有的，让IDE不自动提示该属性
+     * <li>若真要想改该值，只能绕其它法子来改
      * @Column(type='integer', nullable=false ,min=1)
      */
-    public $createtime;
+    private $createtime;
 
     /**
      * 性别
@@ -95,10 +98,11 @@ class UserModel extends \app\base\BaseModel
     
     /**
      * #盐
-     * <li>盐是自动生成，上层调用应该是无感
+     * <li>盐是自动生成，上层无感知的
+     * <li>所有设为私有的。外面无感知salt的存在
      * @Column(type='string', length=6, min=6 ,nullable=false ,errmsg="salt必须6位")
      */
-    public $salt;
+    private $salt;
     
     
     /**
@@ -152,12 +156,6 @@ class UserModel extends \app\base\BaseModel
         //如果某些东西一旦生成就不允许修改,或者是自动生成的，不允许直接传值修改
         //那就在这里进行监视数据的改动
         
-        if ($this->hasChanged('salt'))
-        {
-            //salt不允许直接传值修改。只能由系统自动生成
-            $this->addErrorMsg('不允许修改salt');
-        }
-
 
         //如果监视到密码有改变。则连盐也一起改
         if ($this->hasChanged('passwd'))
@@ -198,6 +196,12 @@ class UserModel extends \app\base\BaseModel
     {
         // TODO Auto-generated method stub
        parent::beforeCreate();
+       
+       
+       /*
+        * #入库前将明文passwd哈希，对于上层调用，无感哈希过程。
+        * #上层调用新增/修改passwd时，均可把passwd当成明文看待
+        */
        
        //将密码HASH    
        $this->passwd = self::getHashPasswd($this->passwd, $this->salt);    
@@ -292,6 +296,12 @@ class UserModel extends \app\base\BaseModel
      */
     public function isRealPasswd($passwd) 
     {
+        /*
+         *#本函数判定某$passwd是不是有效的密码。
+         *#对上层屏蔽哈希过程,上层所有操作都是明文看待
+         *#上层把passwd当成明文使用判断 
+         */
+        
         $new_passwd = self::getHashPasswd($passwd, $this->salt);
         
         return hash_equals($new_passwd,$this->passwd);
@@ -365,7 +375,7 @@ class UserModel extends \app\base\BaseModel
         
         //也可以屏蔽一些重要的数据
         unset($data['passwd']);
-        unset($data['salt']);
+        unset($data['salt']);   //去掉salt后。外部无感知salt的存在
 
         return $data;
     }

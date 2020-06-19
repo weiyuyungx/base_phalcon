@@ -156,11 +156,11 @@ abstract class BaseModel extends \Phalcon\Mvc\Model
 
     /**
      * #验证数据
-     * <li>从子类获取字段注解验证
+     * <li>从子类获取字段注解，进行验证
+     * <li>其注解信息，可以用helper工具自动生成。免手写，可微调
      * <li>这里为一级验证（数据库级 ,大小，长度，类型）
      * <li>return false 时触发onValidationFails 不再往下触发</li>
      * <li>return 其它时 往下触发 </li>
-     *
      * @author WYY 2018年10月29日 上午11:25:34
      */
     public function validation()

@@ -166,11 +166,12 @@ class UserService extends BaseService
      * #phqltest demo
      * @author  WYY 2020-06-19 10:54
      * @param int $id
-     * @return \Phalcon\Mvc\Model\Resultset\Simple|\app\model\UserModel[]
+     * @return \app\model\UserModel
      */
     public static function phqltest($id) 
     {
-        return SelfDao::findOndByPhql($id);
+        //出来是列表，取第一条
+        return SelfDao::findOndByPhql($id)->getFirst();
     }
     
     
