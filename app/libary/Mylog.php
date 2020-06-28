@@ -102,8 +102,11 @@ class Mylog
           }
           
           
-          
+        //用file保存日志。也可以换成其它的适配器  
+        //注意权限
         $log = new \Phalcon\Logger\Adapter\File($this->save_dir);
+
+        
         $log->setFormatter(new \Phalcon\Logger\Formatter\Line('[%type%]%message%','Y-m-d H:i:s'));
 
         foreach ($this->data as $v)

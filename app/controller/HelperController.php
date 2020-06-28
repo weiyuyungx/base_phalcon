@@ -62,8 +62,7 @@ class HelperController extends BaseController
     {
 
           $this->createAll();
-        
-      
+             
     }
     
     

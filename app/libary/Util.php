@@ -430,7 +430,7 @@ class Util
         {
             $config = new \Phalcon\Config\Adapter\Ini(BASE_DIR.'/config.ini');
             
-            $env_file = BASE_DIR.'/my.env';
+            $env_file = BASE_DIR.'/my.ini';
             if (is_file($env_file))
             {
                 $env = new \Phalcon\Config\Adapter\Ini($env_file);

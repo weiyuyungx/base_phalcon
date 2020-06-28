@@ -481,24 +481,5 @@ abstract class BaseModel extends \Phalcon\Mvc\Model
     public function afterDelete()
     {}
 
-    /**
-     * ******************************工具函数************************************
-     */
-
-    /**
-     * 雪花算法生成ID
-     *
-     * @author WYY 2020年2月24日 下午5:06:44
-     */
-    public static function SnowFlake()
-    {
-        // 机器号
-        $machine_num = 0; // 5位 0-31
-
-        $time = Util::msectime(); // 41位
-
-        // 随机数 0 - (2^18-1)
-        $rand = rand(0, pow(2, 18) - 1);
-    }
 }
 

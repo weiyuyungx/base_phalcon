@@ -1,6 +1,6 @@
-#把本文件复制一份，重命名去掉.example (即my.env)
+#把本文件复制一份，重命名去掉.example (即my.ini)
 #自己机的配置，不要上传,不要加入git/svn
-#这里的配置会顶替掉config.ini部份
+#这里的配置会顶替掉config.ini相同的部份
 
 <code>
 //可以嵌入php代码
