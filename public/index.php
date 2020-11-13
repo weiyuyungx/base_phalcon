@@ -13,6 +13,7 @@ date_default_timezone_set('Asia/Shanghai');
 define('IS_WIN', strstr(PHP_OS, 'WIN') ? 1 : 0);
 define('BASE_DIR', str_replace('\\', '/', dirname(__DIR__)));
 define('PUBLIC_DIR', str_replace('\\', '/', __DIR__));
+define('NOW_TIME', time());
 
 set_error_handler('wei_error_handler',E_ALL);
 
@@ -286,6 +287,8 @@ try
     $content = $response->getContent();
 
     $response->send($content);
+    
+    
 
     $mylog->setLog('[content]' . PHP_EOL . $content, \Phalcon\Logger::INFO);
 

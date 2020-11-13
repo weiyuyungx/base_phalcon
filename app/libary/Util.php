@@ -465,6 +465,19 @@ class Util
         return self::getDi()->get('modelsManager');
     }
     
+    /** 
+     * #尝试结束请求求
+     * <li>php-fpm下有效
+     * <li>返回数据给客户端后，程序依然往下走
+     * @author  WYY 2020-07-30 17:00
+     */
+    public static function tryEndRequest()
+    {
+        if (function_exists('fastcgi_finisth_request'))
+        {
+            fastcgi_finisth_request();
+        }
+    }
     
     
     
