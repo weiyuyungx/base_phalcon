@@ -13,7 +13,7 @@ use Phalcon\Mvc\Model;
 abstract class BaseService
 {
     
-    /**
+        /**
      * #查找一条
      * @author  WYY 2020-11-16 09:44
      * @param int $id
@@ -35,14 +35,14 @@ abstract class BaseService
         
         if ($model)
             return $model;
-            else {
-                if ($throwable == true) {
-                    Util::throwException(11, '不存在的ID');
-                }
-                else {
-                    return null;
-                }
+        else {
+            if ($throwable == true) {
+                Util::throwException(11, '不存在的ID');
             }
+            else {
+                return null;
+            }
+        }
             
     }
     
@@ -81,10 +81,10 @@ abstract class BaseService
      */
     public static function delOne($id)
     {
-        return self::findTrueOne($id)->delete();
+        return self::findOneByid($id,true)->delete();
     }
     
-    
+     
     
     /**
      * #生成一个新Model

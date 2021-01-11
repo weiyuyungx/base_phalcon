@@ -7,6 +7,7 @@ use app\dao\UserDao;
 use app\libary\Page;
 use app\model\UserModel;
 use app\libary\Util;
+use Phalcon\Di;
 
 
 /**
@@ -30,12 +31,13 @@ class IndexController extends BaseController
      */
     public function testAction()
     {
-          
-        $di = UserService::findOneByid(4);
+ 
         
         
-        print_r($di->toArray());
-
+        
+        
+        
+        
     }
 
     
@@ -266,8 +268,7 @@ class IndexController extends BaseController
     }
     
     
-    
-    
+
     
 }
 

@@ -61,10 +61,23 @@ try
                 'namespace' => 'app\controller'
             ));
 
+            //普通
             $router->add('/:controller/:action/:params', array(
                 'controller' => 1,
                 'action' => 2,
                 'params' => 3
+            ));
+            
+            
+            //插件
+            $router->add('/Plugin.([a-zA-Z]+)/([a-zA-Z]+)/:action/:params', array(
+                'controller' => 'Plugin',
+                'action' => 'index',
+                'PluginName' => 1,
+                'PluginController' => 2,
+                'PluginAction' => 3,
+                'params' => 4,
+                'namespace' => 'app\controller'
             ));
             
             //用户权限

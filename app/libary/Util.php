@@ -1,6 +1,8 @@
 <?php
 namespace app\libary;
 
+use Phalcon\Mvc\ModelInterface;
+
 /**
  * 工具类（通用）
  *
@@ -479,6 +481,70 @@ class Util
         }
     }
     
+    
+    
+    
+    /**
+     * #服务名称改成Model名
+     * @author  WYY 2020-11-16 09:48
+     * @param string $name
+     * @return mixed
+     */
+    public static function serviceNameToModelName($name)
+    {
+        // 'app\service\UserService';  => 'app\model\UserModel';
+        $name = str_replace('service', 'model', $name);
+        $name = str_replace('Service', 'Model', $name);
+        
+        return $name;
+    }
+    
+    
+    
+    /**
+     * #模板的字段
+     * <li>非数据库的字段
+     * <li>phql专用
+     * @author  WYY 2020-12-21 16:18
+     * @param object $model
+     * @param array $except 排除的字段
+     * @return array
+     */
+    public static function getModelFields(ModelInterface $model,$except = [])
+    {
+        /** @var \Phalcon\Mvc\Model\MetaData\Memory $modelsMetadata */
+        $modelsMetadata = Util::getDi()->get('modelsMetadata');
+        
+        $data = $modelsMetadata->readColumnMap($model);
+        
+        if (empty($data[0])) {
+            $data = $modelsMetadata->getAttributes($model);
+            
+            foreach ($except as $e)
+            {
+                $index = array_search($e, $data);
+                
+                if ($index !== false){
+                    unset($data[$index]);
+                }
+            }
+            
+            $fields = array_values($data);
+            
+        }else {
+            
+            
+            foreach ($except as $e)
+            {
+                unset($data[0][$e]); //不要查body这个
+            }
+            
+            
+            $fields = array_values($data[0]);
+        }
+        
+        return $fields;
+    }
     
     
 }
