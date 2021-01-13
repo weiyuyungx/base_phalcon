@@ -36,7 +36,8 @@ class PluginController extends BaseController
             
             'controller' => $PluginController,
             'action' => $PluginAction,
-            'namespace' => 'app\plugin\\'.$PluginName
+            'namespace' => 'app\plugin\\'.$PluginName,
+            'params' =>$this->dispatcher->getParams()
         ]);
         
         

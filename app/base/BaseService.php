@@ -3,6 +3,7 @@ namespace app\base;
 
 use app\libary\Util;
 use Phalcon\Mvc\Model;
+use Phalcon\Mvc\Model\Query\Builder;
 
 
 /**
@@ -12,40 +13,6 @@ use Phalcon\Mvc\Model;
  */
 abstract class BaseService
 {
-    
-        /**
-     * #查找一条
-     * @author  WYY 2020-11-16 09:44
-     * @param int $id
-     * @param bool $throwable 为空时处理
-     * @throws \Exception
-     * @return Model
-     */
-    public static function findOneByid($id , $throwable = false)
-    {
-        $class = Util::serviceNameToModelName(static::class);
-        
-        
-        $builder = new \Phalcon\Mvc\Model\Query\Builder();
-        
-        $builder->from($class);
-        $builder->where('id = :id:',['id'=>$id]);
-        
-        $model =  $builder->getQuery()->setUniqueRow(true)->execute();
-        
-        if ($model)
-            return $model;
-        else {
-            if ($throwable == true) {
-                Util::throwException(11, '不存在的ID');
-            }
-            else {
-                return null;
-            }
-        }
-            
-    }
-    
     
     /**
      * #保存一条
@@ -58,15 +25,7 @@ abstract class BaseService
      */
     public static function saveOne($data, $id = 0, $white_list = null)
     {
-        if ($id > 0)
-        {
-            $model = self::findOneByid($id,true);
-        }
-        else
-        {
-            //生成一个新对象
-            $model = static::getNewModel();
-        }
+        $model = self::getModel($id);
         
         return $model->save($data,$white_list);
     }
@@ -78,10 +37,15 @@ abstract class BaseService
      * @author  WYY 2020-11-13 17:43
      * @param int $id
      * @return boolean
+     * @exception \Exception
      */
     public static function delOne($id)
     {
-        return self::findOneByid($id,true)->delete();
+        if ($id <= 0){
+            Util::throwException(1004, '无效的ID');
+        }
+        
+        return self::getModel($id)->delete();
     }
     
      
@@ -98,6 +62,39 @@ abstract class BaseService
         return new $class();
     }
     
+    
+    /** 
+     * #获取一个model
+     * @author  WYY 2021-01-13 11:03
+     * @param number $id
+     * @return \Phalcon\Mvc\Model
+     * @exception \Exception
+     */
+    public static function getModel($id = 0) 
+    {
+        if ($id > 0){
+            
+            $builder = new Builder();
+            $class = Util::serviceNameToModelName(static::class);
+            $builder->from($class);
+            
+            $builder->andWhere('id = :id:',['id'=>$id]);
+            $builder->limit(1);
+            
+            $model = $builder->getQuery()->execute();
+         
+         
+            if ($model->count() == 0){
+                Util::throwException(1003, '不存在的ID');
+                
+            }else {
+                return $model->getFirst();
+            }
+                  
+        }else{
+            return self::getNewModel();
+        }
+    }
     
     
 }

@@ -61,8 +61,9 @@ class HelperController extends BaseController
     public function testAction() 
     {
 
-          $this->createAll();
-             
+        $data =  $this->createAll();
+          
+        return $this->ok($data);
     }
     
     
@@ -135,15 +136,16 @@ class HelperController extends BaseController
         }
         
         //简单统计
-        echo '<hr/>';
-        echo  'tables_total: '.$total.'<br/>';
-        echo  'model_succ: '.$model_succ.'<br/>';
-        echo  'model_fail: '.$model_fail.'<br/>';
-        echo  'dao_succ: '.$dao_succ.'<br/>';
-        echo  'dao_fail: '.$dao_fail.'<br/>';
-        echo  'service_succ: '.$service_succ.'<br/>';
-        echo  'service_fail: '.$service_fail.'<br/>';
-           
+        $data['tables_total'] = $total;
+        $data['model_succ'] = $model_succ;
+        $data['model_fail'] = $model_fail;
+        $data['dao_succ'] = $dao_succ;
+        $data['dao_fail'] = $dao_fail;
+        $data['service_succ'] = $service_succ;
+        $data['service_fail'] = $service_fail;
+        
+        
+        return  $data; 
     }
     
 
@@ -212,6 +214,8 @@ class HelperController extends BaseController
         $view = $this->view;
         
         $view->setVar('name_space', $this->dao_name_space);
+        $view->setVar('full_model_name', $this->name_space.'\\'.$model_name);
+        $view->setVar('model_name', $model_name);
         $view->setVar('dao_name', $dao_name);
         $view->setVar('parent_class', $this->dao_parent_class);
         $view->setVar('author', 'HelperTool auto at '.date('Y-m-d H:i:s'));

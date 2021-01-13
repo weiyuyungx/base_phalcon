@@ -7,13 +7,15 @@ use app\libary\Page;
 use app\libary\Util;
 
 /**
- * #对一些常用操作的封装
+ * #对一些常用查询操作的封装
+ * <li>只查询，不涉及update/create/delete
+ * <li>不涉及业务逻辑
  * @author Administrator
- *        
+ *
  */
 abstract class BaseDao
 {
-
+    
     /**
      * 查找一条
      *
@@ -21,38 +23,30 @@ abstract class BaseDao
      * @param int $id
      * @return Model
      */
-    public static function findOne($id)
+    public static function findOneByid($id,$throwable = false)
     {
         $builder = self::getBuilder();
-
+        
         $builder->where('id = :id:', [
             'id' =>  $id
         ]);
-
-        return self::executeOne($builder);
-    }
-    
-    /** 查找一条，如果不存在抛出异常
-    * @author WYY  2020-01-02 16:56  
-    * @param int $id
-    * @throws \Exception 
-    * @return \Phalcon\Mvc\Model\Resultset\Simple 
-    */
-    public static function findOneException($id)
-    {
-        $one = self::findOne($id);
         
-        if (empty($one))
-            throw new \Exception('不存在的ID',1001);
-        else 
-            return $one;
+        $model = self::executeOne($builder);
+        
+        if ($throwable && !$model){
+            
+            Util::throwException(1001, '不存在的ID');
+            
+        }else{
+            return $model;
+        }
+        
     }
     
     
     
-
     /**
-         * 查找全部
+     * #查找全部
      *
      * @author WYY 2018年9月10日 上午10:43:14
      * @return \Phalcon\Mvc\Model\Resultset\Simple
@@ -60,45 +54,15 @@ abstract class BaseDao
     public static function getAll()
     {
         $builder = self::getBuilder();
-
+        
         $builder->orderBy('id DESC');
-
+        
         return self::execute($builder);
     }
-
-    /**
-     * 保存一条数据
-     *
-     * @author WYY 2018年10月30日 上午11:56:08
-     * @param array $data
-     * @param number $id
-     */
-    public static function saveOne($data, $id = 0, $white_list = null)
-    {
-        if ($id > 0)
-            return self::editOne($data, $id, $white_list);
-        else
-            return self::addOne($data ,$white_list);
-    }
-
-
-
-    /**
-     * 删除一条
-     *
-     * @author WYY 2018年9月10日 下午3:28:07
-     * @param int $id
-     * @return bool
-     */
-    public static function delOne($id)
-    {
-        $obj = self::findOneException($id);
-
-        return $obj->delete();
-    }
-
+    
+    
     // end
-
+    
     /**
      * 一组ID查找
      *
@@ -109,12 +73,12 @@ abstract class BaseDao
     public static function getByIdIn($id_arr)
     {
         $builder = self::getBuilder();
-
+        
         $builder->inWhere('id', $id_arr);
-
+        
         return self::execute($builder);
     }
-
+    
     /**
      * 获得默认的builder
      *
@@ -124,13 +88,13 @@ abstract class BaseDao
     protected static function getBuilder($default = true)
     {
         $builder = new \Phalcon\Mvc\Model\Query\Builder();
-
+        
         if ($default)
         {
             $builder->from(self::getModelClassName());
             $builder->orderBy('id DESC');
         }
-
+        
         return $builder;
     }
     
@@ -146,12 +110,12 @@ abstract class BaseDao
     protected static function excutePhql($phql, $param)
     {
         $modelsManager = Util::getModelsManager();
-       
+        
         return $modelsManager->createQuery($phql)->execute($param);
     }
     
     
-
+    
     /**
      * 执行一条 builder语句
      *
@@ -164,7 +128,7 @@ abstract class BaseDao
     {
         return $builder->getQuery()->execute($param);
     }
-
+    
     /**
      * 执行一条 builder语句 返回一条查询
      *
@@ -178,7 +142,7 @@ abstract class BaseDao
         $builder->limit(1, 0);
         return self::execute($builder, $param)->getFirst();
     }
-
+    
     /**
      * 计算总条数
      *
@@ -188,19 +152,18 @@ abstract class BaseDao
     protected static function getSumExecute($builder, $param = null)
     {
         $columns = $builder->getColumns();
-
+        
         $builder->columns('count(*) as total');
         $row = self::executeOne($builder, $param);
         $total = $row['total'];
-
+        
         $builder->columns($columns);
-
+        
         return $total;
     }
-
+    
     /**
      * 查找列表 （简单封装,分页）
-     *
      * @author WYY 2019年3月25日 上午10:47:01
      * @param array $where
      * @param Page $page
@@ -208,23 +171,37 @@ abstract class BaseDao
      */
     public static function findListByWherePage($where, Page $page = null)
     {
-
+        
         $builder = self::doWhere($where, self::getBuilder());
-
-        // 如果分页存在
-        if ($page)
-        {
+        
+        return self::findListByBuilderPage($builder,$page);
+    }
+    
+    
+    /**
+     * #查找列表 （简单封装,分页）
+     * @author WYY 2019年3月25日 上午10:47:01
+     * @param Builder $builder
+     * @param Page $page
+     * @return \Phalcon\Mvc\Model\Resultset\Simple
+     */
+    public static function findListByBuilderPage(Builder $builder, Page $page)
+    {
+        if ($page){
+            
             $page->setTotal(self::getSumExecute($builder));
-
+            
             $builder->limit($page->getPage_size());
             $builder->offset($page->offset());
         }
-
+        
         return self::execute($builder);
     }
-
+    
+    
+    
     // end function
-
+    
     /**
      * 查找一条 （简单封装）
      *
@@ -237,10 +214,10 @@ abstract class BaseDao
     {
         
         $builder = self::doWhere($where, self::getBuilder());
-
+        
         return self::executeOne($builder);
     }
-
+    
     
     
     /** 统一处理builder
@@ -251,7 +228,7 @@ abstract class BaseDao
      */
     private static function doWhere($where , $builder)
     {
-
+        
         foreach ($where as $k => $v)
         {
             switch ($v[0])
@@ -309,15 +286,11 @@ abstract class BaseDao
         } //
         
         
-
+        
         return $builder;
-    } 
-
+    }
     
     
-    
-    // end function
-
     /**
      * 对应的model全路径名
      *
@@ -333,47 +306,10 @@ abstract class BaseDao
             'Model',
             'model'
         ], get_called_class());
-
+        
         return $class_name;
     }
-
-    /**
-     * 添加一条
-     *
-     * @author WYY 2018年9月10日 上午10:51:39
-     * @param array $data
-     * @throws \Phalcon\Exception
-     * @return int|boolean
-     */
-    private static function addOne($data,$white_list = null)
-    {
-
-        $class = new \ReflectionClass(self::getModelClassName());
-        $instance = $class->newInstance();
-        
-
-       $result = $instance->save($data ,$white_list);
-
-        return $instance->id;
-    }
-
-    // end
-
-    /**
-     * 修改一条
-     *
-     * @author WYY 2018年9月10日 上午11:14:43
-     * @param array $data
-     * @param int $id
-     * @param array $white_list 白名单
-     * @throws \Phalcon\Exception
-     * @return int|bool
-     */
-    private static function editOne($data, $id, $white_list = null)
-    {
-        $obj = self::findOneException($id);
-
-        return $obj->save($data, $white_list);
-    }
+    
+    
 }
 
