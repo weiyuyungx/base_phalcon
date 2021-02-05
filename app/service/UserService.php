@@ -38,7 +38,7 @@ class UserService extends BaseService
             
             //如果业务不需要从缓存中拿。就直接去数据库拿
             
-            return SelfDao::findOne($id);
+            return SelfDao::findOneByid($id);
         }
  
     }

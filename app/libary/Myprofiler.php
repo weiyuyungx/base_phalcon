@@ -18,19 +18,25 @@ class Myprofiler extends \Phalcon\Db\Profiler
     public function afterEndProfile(\Phalcon\Db\Profiler\Item $profile)
     {
 
-        //本次SQL执行时间 ms
-        $cur_time = (int)($profile->getTotalElapsedSeconds()*1000);
+        $log = Mydi::getLog();
         
-        $str = '[sql]['.$cur_time.'ms]'.$profile->getSQLStatement();
+        // 本次SQL执行时间 ms
+        $cur_time = (int) ($profile->getTotalElapsedSeconds() * 1000);
         
-        if ($cur_time > 10000)
-            $this->mylog->setLog($str,\Phalcon\Logger::ALERT);
-        else if ($cur_time > 1000)
-            $this->mylog->setLog($str,\Phalcon\Logger::WARNING);
-        else if ($cur_time > 100)
-            $this->mylog->setLog($str,\Phalcon\Logger::NOTICE);
-        else
-            $this->mylog->setLog($str,\Phalcon\Logger::INFO);
+        $str = '[sql][' . $cur_time . 'ms]' . $profile->getSQLStatement();
+        
+        if ($cur_time > 10000) {
+            $log->log($str, \Phalcon\Logger::ALERT);
+        }
+        else if ($cur_time > 1000) {
+            $log->log($str, \Phalcon\Logger::WARNING);
+        }
+        else if ($cur_time > 100) {
+            $log->log($str, \Phalcon\Logger::NOTICE);
+        } 
+        else {
+            $log->log($str, \Phalcon\Logger::INFO);
+        }
                         
     }//end
     

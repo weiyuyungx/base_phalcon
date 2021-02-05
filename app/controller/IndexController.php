@@ -8,6 +8,9 @@ use app\libary\Page;
 use app\model\UserModel;
 use app\libary\Util;
 use Phalcon\Di;
+use app\service\OrderService;
+use app\dao\OrderFeeDao;
+use app\service\OrderFeeService;
 
 
 /**
@@ -33,9 +36,7 @@ class IndexController extends BaseController
     {
  
         
-        
-        
-        
+ 
         
         
     }
@@ -126,7 +127,7 @@ class IndexController extends BaseController
          */
         
         
-        $user = UserService::findTrueOne($uid);
+        $user = UserService::findOneByid(4);
         
         /*
          *在这里最终会输出JSON。所以会自动调用toArray()
@@ -268,6 +269,11 @@ class IndexController extends BaseController
     }
     
     
+    
+    public function infoAction() 
+    {
+        echo phpinfo();
+    }
 
     
 }

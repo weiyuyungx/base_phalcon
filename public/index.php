@@ -7,6 +7,7 @@ use Phalcon\Session\Adapter\Redis;
 use app\libary\Util;
 use app\libary\Mylog;
 use app\libary\Myprofiler;
+use app\libary\Mydi;
 
 
 date_default_timezone_set('Asia/Shanghai');
@@ -14,6 +15,8 @@ define('IS_WIN', strstr(PHP_OS, 'WIN') ? 1 : 0);
 define('BASE_DIR', str_replace('\\', '/', dirname(__DIR__)));
 define('PUBLIC_DIR', str_replace('\\', '/', __DIR__));
 define('NOW_TIME', time());
+define('REQUEST_TIME_FLOAT', $_SERVER['REQUEST_TIME_FLOAT']);
+
 
 set_error_handler('wei_error_handler',E_ALL);
 
@@ -26,265 +29,15 @@ set_error_handler('wei_error_handler',E_ALL);
  *
  */
 
-
-
 // 注册命名空间
 $Loader = new \Phalcon\Loader();
 
 $Loader->registerNamespaces( [ 'app' => BASE_DIR . "/app/"])->register();
 
-  
-// 日志记录器
-$mylog = new \app\libary\Mylog();
-
-
 try
 {
+    $di = new Mydi();
 
-    $di = new Phalcon\DI\FactoryDefault();
-
-    $di->set('mylog', $mylog);
-
-    //设置路由
-    $di->set('router',
-        function ()
-        {
-
-            $router = new \Phalcon\Mvc\Router(false);
-
-            $router->removeExtraSlashes(true);
-
-//             //默认无参
-            $router->add('/', array(
-                'controller' => 'Index',
-                'action' => 'index',
-                'namespace' => 'app\controller'
-            ));
-
-            //普通
-            $router->add('/:controller/:action/:params', array(
-                'controller' => 1,
-                'action' => 2,
-                'params' => 3
-            ));
-            
-            
-            //插件
-            $router->add('/Plugin.([a-zA-Z]+)/([a-zA-Z]+)/:action/:params', array(
-                'controller' => 'Plugin',
-                'action' => 'index',
-                'PluginName' => 1,
-                'PluginController' => 2,
-                'PluginAction' => 3,
-                'params' => 4,
-                'namespace' => 'app\controller'
-            ));
-            
-            //用户权限
-            $router->add('/user.([a-zA-Z]+)/:action/:params', array(
-                'controller' => 1,
-                'action' => 2,
-                'params' => 3,
-                'namespace' => 'app\controller\user'
-            ));
-            
-            // 不符合路由时
-            $router->notFound([
-                'controller' => 'Error',
-                'action' => 'notFound',
-                'namespace' => 'app\base'
-            ]);
-
-            return $router;
-        },true);
-
-    
-    //注入session
-    $di->set('session',
-        function ()
-        {
-            $session = new \Phalcon\Session\Adapter\Files([
-                'uniqueId' => 'base_phalcon'
-            ]);
-            
-            $session->start();
-
-            return $session;
-            
-        },true);
-
-    
-    //事件管理器
-    $di->set('eventsManager', function()
-    {
-        $eventsManager = new Manager();
-        $eventsManager->attach('dispatch',
-            function ($event, $dispatcher, $exception)
-            {
-                //控制器执行抛错时
-                if ($event->getType() == 'beforeException')
-                {
-                    $dispatcher->forward([
-                        'controller' => 'Error',
-                        'action' => 'exception',
-                        'namespace' => 'app\base',
-                        "params" => array(
-                            'exception' => $exception
-                        ),
-                    ]);
-                }
-                
-                //分发器找不到对应的controller/action
-                if ($event->getType() == 'beforeNotFoundAction')
-                {
-                    $dispatcher->forward([
-                        'controller' => 'Error',
-                        'action' => 'notFound2',
-                        'namespace' => 'app\base'
-                    ]);
-                }
-                
-                
-                
-        });
-        
-        return $eventsManager;
-    },true);
-    
-   
-    
-    //分发器注入事件管理器
-    $di->set("dispatcher",
-        function () use ($di)
-        {
-            $dispatcher = new Dispatcher();
-            $dispatcher->setDefaultNamespace('app\controller');
-
-            $dispatcher->setEventsManager($di->get('eventsManager'));
-
-            return $dispatcher;
-        },true);
-
-    
-    
-    
-    //视图
-    $di->set("view",
-        function ()
-        {
-            $view = new View();
-            $view->setViewsDir(BASE_DIR . "/app/view/");
-            
-            $view->registerEngines(
-                array(
-                    '.phtml' => 'Phalcon\Mvc\View\Engine\Php',
-                    '.html' => function ($view, $di)
-                    {
-                        $volt = new \Phalcon\Mvc\View\Engine\Volt($view, $di);
-                        $volt->setOptions(array(
-                            // 模板是否实时编译
-                            'compileAlways' => false,
-                            // 模板编译目录
-                            'compiledPath' => BASE_DIR . "/runtime/compiled/"
-                        ));
-                        
-                        return $volt;
-                    },
-                    
-                    '.tpl' => function ($view, $di)  //渲染生成model/dao/service文件时用
-                    {
-                        $volt = new \Phalcon\Mvc\View\Engine\Volt($view, $di);
-                        $volt->setOptions(array(
-                            // 模板是否实时编译
-                            'compileAlways' => false,
-                            // 模板编译目录
-                            'compiledPath' => BASE_DIR . "/runtime/compiled/"
-                        ));
-                        
-                        return $volt;
-                    }
-                ));
-            return $view;
-    },true);
-    
-
-    // 数据库
-    $di->set('db',
-        function () use ($mylog, $di)
-        {
-            //数据库配置
-            $db_config = Util::getConfig()->database->toArray();
-
-            $connection = new \Phalcon\Db\Adapter\Pdo\Mysql($db_config);
-
-            $eventsManager = $di->get('eventsManager');
-
-            $profiler = new Myprofiler();
-
-            $profiler->mylog = $mylog;
-
-            // 监听数据库的事件
-            $eventsManager->attach('db',
-                function ($event, $connection) use ($profiler)
-                {
-                    if ($event->getType() == 'beforeQuery')
-                    {
-                        // 操作前启动分析
-                        $profiler->startProfile($connection->getSQLStatement());
-                    }
-                    if ($event->getType() == 'afterQuery')
-                    {
-                        // 操作后停止分析
-                        $profiler->stopProfile();
-                    }
-                });
-
-            $connection->setEventsManager($eventsManager);
-
-            return $connection;
-        },true);
-
-    
-    //元数据管理
-    $di->set('modelsMetadata',function ()
-    {
-        // Instantiate a metadata adapter
-        $metadata = new \Phalcon\Mvc\Model\MetaData\Memory();
-        
-        //用注解方式
-        $metadata->setStrategy(
-            new \Phalcon\Mvc\Model\MetaData\Strategy\Annotations()
-            );
-        
-        return $metadata;
-    },true);
-
-    
-    
-    // 设置模型缓存服务
-    $di->set(
-        'modelsCache',
-        function () {
-            // 缓存数据一天（默认设置）
-            $frontCache = new \Phalcon\Cache\Frontend\Data(
-                [
-                    'lifetime' => 3600 *24,
-                ]
-                );
-            
-            //用文件进行缓存 ,可自行改成其它           
-            $cache = new \Phalcon\Cache\Backend\File(
-                $frontCache,
-                [
-                    "cacheDir" => BASE_DIR . "/runtime/cache/",
-                ]
-                );
-            
-            return $cache;
-        }
-    );
-
-    
     //uri 任意取一个
     if (isset($_GET['_url']) )
         $uri = $_GET['_url'];
@@ -299,11 +52,15 @@ try
 
     $content = $response->getContent();
 
-    $response->send($content);
+    echo $content;
     
     
-
-    $mylog->setLog('[content]' . PHP_EOL . $content, \Phalcon\Logger::INFO);
+    //日志处理
+    $log = Mydi::getLog();
+    
+    $log->log('[content]' . PHP_EOL . $content, \Phalcon\Logger::INFO);
+    
+    $log->commit();//提交
 
 }
 catch (\Throwable $e) // 意外抛错(语法类型的错)
@@ -352,15 +109,17 @@ function weiout($json)
     $response->setHeader('appname', 'bzt3.0');
     
     
-    
-    $mylog = new Mylog();
-    // 记录日志
-    $mylog->setSave_dir(BASE_DIR . '/runtime/error/' . date('Ymd') . '_err.txt'); // 出错时的地址
-    $mylog->setLog('[code]' . $json['code'], \Phalcon\Logger::ERROR);
-    $mylog->setLog('[msg]' . $json['debug']['errmsg'], \Phalcon\Logger::ERROR);
-    
-    
     $response->send();
+    
+    //错误日志
+    $log = new \Phalcon\Logger\Adapter\File(BASE_DIR . '/runtime/error/' . date('Ymd') . '_err.txt');
+    
+    $log->begin();
+    
+    $log->log('[code]' . $json['code'], \Phalcon\Logger::ERROR);
+    $log->log('[msg]' . $json['debug']['errmsg'], \Phalcon\Logger::ERROR);
+    
+    
 }
 
 
