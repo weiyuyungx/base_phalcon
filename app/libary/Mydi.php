@@ -233,7 +233,8 @@ class Mydi extends FactoryDefault
         $this->setShared('modelsMetadata', function () {
             // Instantiate a metadata adapter
             $metadata = new \Phalcon\Mvc\Model\MetaData\Memory();
-
+            
+   
             // 用注解方式
             $metadata->setStrategy(new \Phalcon\Mvc\Model\MetaData\Strategy\Annotations());
 
@@ -363,16 +364,6 @@ class Mydi extends FactoryDefault
         return self::getDi()->get('log');
     }
     
-    
-    /**
-     * #Mylog
-     * @author  WYY 2021-02-05 10:25
-     * @return Mylog
-     */
-    public static function getMylog()
-    {
-        return self::getDi()->get('mylog');
-    }
     
     /** 
      * #事件管理器
